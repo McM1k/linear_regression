@@ -1,6 +1,6 @@
 use std::fs::File;
-use std::io::BufReader;
 use std::io::prelude::*;
+use std::io::BufReader;
 
 pub fn get_file_content(filename: String) -> Vec<(usize, usize)> {
     let file = open_file(filename);
@@ -15,7 +15,7 @@ pub fn get_file_content(filename: String) -> Vec<(usize, usize)> {
 
 fn parse_line(line: String) -> (usize, usize) {
     let vec: Vec<String> = line.split(',').map(|l| l.to_string()).collect();
-    if vec.len() != 2{
+    if vec.len() != 2 {
         panic!("Data line corrupted");
     }
 
@@ -27,7 +27,9 @@ fn parse_line(line: String) -> (usize, usize) {
 fn file_to_strings(file: File) -> Vec<String> {
     let mut buf_reader = BufReader::new(file);
     let mut contents = String::new();
-    buf_reader.read_to_string(&mut contents).expect("Cannot read from file");
+    buf_reader
+        .read_to_string(&mut contents)
+        .expect("Cannot read from file");
     contents.lines().map(|l| l.to_string()).collect()
 }
 

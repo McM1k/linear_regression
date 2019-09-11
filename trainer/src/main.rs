@@ -1,14 +1,16 @@
-mod parser;
 mod draw;
+mod parser;
 
+use crate::parser::get_file_content;
 use std::env;
 use std::fs::File;
-use std::path::Path;
-use crate::parser::get_file_content;
 use std::io::Write;
+use std::path::Path;
 
 fn main() {
-    let filename = env::args().nth(1).unwrap_or_else(|| panic!("Cannot read fileName"));
+    let filename = env::args()
+        .nth(1)
+        .unwrap_or_else(|| panic!("Cannot read fileName"));
     let data = get_file_content(filename);
     let xrange = get_range(data.clone());
     let scaled_data = feature_scaling(data.clone(), xrange);
@@ -28,14 +30,18 @@ fn main() {
     println!("Thetas written in trainer/theta !");
 }
 
-fn get_range(data: Vec<(usize, usize)>) -> (f64, f64){
+fn get_range(data: Vec<(usize, usize)>) -> (f64, f64) {
     let mut xmax = 0;
     for (x, _y) in data.clone() {
-        if xmax < x { xmax = x }
+        if xmax < x {
+            xmax = x
+        }
     }
     let mut xmin = xmax;
     for (x, _y) in data.clone() {
-        if xmin > x { xmin = x }
+        if xmin > x {
+            xmin = x
+        }
     }
 
     (xmin as f64, xmax as f64)
@@ -46,7 +52,9 @@ fn unnormalize(xrange: (f64, f64), theta: (f64, f64)) -> (f64, f64) {
 }
 
 fn feature_scaling(data: Vec<(usize, usize)>, xrange: (f64, f64)) -> Vec<(f64, f64)> {
-    data.iter().map(|(x, y)| ((*x as f64 - xrange.0) / (xrange.1 - xrange.0), *y as f64)).collect()
+    data.iter()
+        .map(|(x, y)| ((*x as f64 - xrange.0) / (xrange.1 - xrange.0), *y as f64))
+        .collect()
 }
 
 fn estimate_price(mileage: f64, theta: (f64, f64)) -> f64 {
@@ -65,7 +73,7 @@ fn calc_t0(rate: f64, data: Vec<(f64, f64)>, theta: (f64, f64)) -> f64 {
 fn calc_t1(rate: f64, data: Vec<(f64, f64)>, theta: (f64, f64)) -> f64 {
     let mut sum = f64::from(0);
     for (k, p) in data.clone() {
-        let (km , price) = (k as f64, p as f64);
+        let (km, price) = (k as f64, p as f64);
         sum += (estimate_price(km, theta) - price) * km;
     }
     rate * (sum / data.len() as f64)
@@ -112,14 +120,14 @@ mod trainer_tests {
 
         #[test]
         fn with_values_17() {
-            let data = vec![(4, 15)];
+            let data = vec![(4.0, 15.0)];
             let test = calc_t0(1.0, data, (5.0, 3.0));
             assert_eq!(test, 2.0);
         }
 
         #[test]
         fn with_values_17_next() {
-            let data = vec![(4, 15)];
+            let data = vec![(4.0, 15.0)];
             let test = calc_t0(1.0, data, (2.0, 8.0));
             assert_eq!(test, 19.0);
         }
@@ -130,14 +138,14 @@ mod trainer_tests {
 
         #[test]
         fn with_values_17() {
-            let data = vec![(4, 15)];
+            let data = vec![(4.0, 15.0)];
             let test = calc_t1(1.0, data, (5.0, 3.0));
             assert_eq!(test, 8.0);
         }
 
         #[test]
         fn with_values_17_next() {
-            let data = vec![(4, 15)];
+            let data = vec![(4.0, 15.0)];
             let test = calc_t1(1.0, data, (2.0, 8.0));
             assert_eq!(test, 76.0);
         }
