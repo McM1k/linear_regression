@@ -10,25 +10,50 @@ use std::io::Write;
 fn main() {
     let filename = env::args().nth(1).unwrap_or_else(|| panic!("Cannot read fileName"));
     let data = get_file_content(filename);
+    let xrange = get_range(data.clone());
+    let scaled_data = feature_scaling(data.clone(), xrange);
 
     let mut theta = (f64::from(0), f64::from(0));
-    let rate = -1.0;
-    for i in 0..(data.len() * 4) {
-        let tmp0 = calc_t0(rate, data.clone(), theta);
-        let tmp1 = calc_t1(rate, data.clone(), theta);
-        println!("{} {}", theta.0, theta.1);
+    let rate = 1.0;
+    let iterations = data.len() * 20;
+    for _i in 0..iterations {
+        let tmp0 = calc_t0(rate, scaled_data.clone(), theta);
+        let tmp1 = calc_t1(rate, scaled_data.clone(), theta);
+        //println!("{} {}", theta.0, theta.1);
         theta = (theta.0 - tmp0, theta.1 - tmp1);
     }
-
-    draw::render_graph(data);
+    theta = unnormalize(xrange, theta);
+    draw::render_graph(data, xrange, theta);
     write_in_file("theta".to_string(), theta);
+    println!("Thetas written in trainer/theta !");
+}
+
+fn get_range(data: Vec<(usize, usize)>) -> (f64, f64){
+    let mut xmax = 0;
+    for (x, _y) in data.clone() {
+        if xmax < x { xmax = x }
+    }
+    let mut xmin = xmax;
+    for (x, _y) in data.clone() {
+        if xmin > x { xmin = x }
+    }
+
+    (xmin as f64, xmax as f64)
+}
+
+fn unnormalize(xrange: (f64, f64), theta: (f64, f64)) -> (f64, f64) {
+    (theta.0, theta.1 / (xrange.1 - xrange.0))
+}
+
+fn feature_scaling(data: Vec<(usize, usize)>, xrange: (f64, f64)) -> Vec<(f64, f64)> {
+    data.iter().map(|(x, y)| ((*x as f64 - xrange.0) / (xrange.1 - xrange.0), *y as f64)).collect()
 }
 
 fn estimate_price(mileage: f64, theta: (f64, f64)) -> f64 {
     theta.0 + (theta.1 * mileage)
 }
 
-fn calc_t0(rate: f64, data: Vec<(usize, usize)>, theta: (f64, f64)) -> f64 {
+fn calc_t0(rate: f64, data: Vec<(f64, f64)>, theta: (f64, f64)) -> f64 {
     let mut sum = f64::from(0);
     for (k, p) in data.clone() {
         let (km, price) = (k as f64, p as f64);
@@ -37,7 +62,7 @@ fn calc_t0(rate: f64, data: Vec<(usize, usize)>, theta: (f64, f64)) -> f64 {
     rate * (sum / data.len() as f64)
 }
 
-fn calc_t1(rate: f64, data: Vec<(usize, usize)>, theta: (f64, f64)) -> f64 {
+fn calc_t1(rate: f64, data: Vec<(f64, f64)>, theta: (f64, f64)) -> f64 {
     let mut sum = f64::from(0);
     for (k, p) in data.clone() {
         let (km , price) = (k as f64, p as f64);

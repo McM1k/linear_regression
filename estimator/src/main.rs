@@ -23,7 +23,7 @@ fn get_thetas() -> (f64, f64) {
 }
 
 fn main() {
-    print!("Please input mileage : ");
+    println!("Please input mileage : ");
     let mileage = match scanln_fmt!("{}", usize) {
         Ok(x) => x,
         Err(_e) => panic!("Wrong input"),
